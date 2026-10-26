@@ -1,0 +1,14 @@
+# Giá trị mẫu; chủ dự án tự cấu hình DB, JWT và bảo mật khi cài đặt backend.
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/cinema_booking}
+    username: ${DB_USERNAME:}
+    password: ${DB_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: none # Chưa có entity JPA; tự thiết kế schema trước khi chạy.
+jwt:
+  secret: ${JWT_SECRET:} # Không đặt khóa thật trong mã nguồn.
+  expiration: ${JWT_EXPIRATION:3600000}
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}

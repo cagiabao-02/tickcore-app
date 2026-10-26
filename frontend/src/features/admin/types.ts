@@ -1,0 +1,21 @@
+/** Kiểu của chức năng admin; tái xuất từ hợp đồng chung để tránh lệch DTO. */
+export type {
+  DashboardSummary,
+  RevenueByDay,
+  TopMovie,
+  OccupancyByCinema,
+  Movie,
+  Cinema,
+  Room,
+  Showtime,
+  Combo,
+  Promotion,
+  Booking,
+  User,
+  Review,
+  Page,
+  SeatLayout,
+  TicketPricing,
+  Role,
+  MessageResponse,
+} from '@/types';
