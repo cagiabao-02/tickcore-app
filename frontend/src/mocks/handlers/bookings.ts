@@ -23,6 +23,46 @@ import { getUserFromToken } from './auth';
 import type { Page } from '@/types';
 
 export const bookingHandlers = [
+  // Xác nhận check-in bằng mã đọc từ QR vé (máy quét thường nhập như bàn phím).
+  http.post('/api/v1/admin/bookings/check-in', async ({ request }) => {
+    const user = getUserFromToken(request.headers.get('Authorization'));
+    if (!user) return mockError(401, 'UNAUTHORIZED', 'common.sessionExpired');
+    if (user.role !== 'ADMIN') return mockError(403, 'FORBIDDEN', 'FORBIDDEN');
+    const body = (await request.json()) as { ticketCode?: string; bookingCode?: string };
+    const scannedCode = body.ticketCode?.trim() || body.bookingCode?.trim();
+    const booking = mockBookings.find(
+      (item) =>
+        item.bookingCode === scannedCode || item.qrCode === scannedCode ||
+        item.seats.some((seat) => seat.ticketCode === scannedCode),
+    );
+    if (!booking) return mockError(404, 'TICKET_NOT_FOUND', 'tickets.scanInvalid');
+    const scannedSeat = booking.seats.find((seat) => seat.ticketCode === scannedCode);
+    if ((scannedSeat && scannedSeat.checkedInAt) || (!scannedSeat && booking.checkedInAt))
+      return HttpResponse.json(
+        {
+          status: 409,
+          code: 'TICKET_ALREADY_CHECKED_IN',
+          message: 'tickets.alreadyCheckedIn',
+          details: {
+            checkedInAt: scannedSeat?.checkedInAt || booking.checkedInAt,
+            checkedInBy: scannedSeat?.checkedInBy || booking.checkedInBy || '',
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 409 },
+      );
+    if (booking.status !== 'CONFIRMED' || booking.paymentStatus !== 'SUCCESS')
+      return mockError(409, 'TICKET_NOT_VALID', 'tickets.scanNotValid');
+    const scannedAt = new Date().toISOString();
+    if (scannedSeat) {
+      scannedSeat.checkedInAt = scannedAt;
+      scannedSeat.checkedInBy = user.fullName;
+    }
+    booking.checkedInAt ||= scannedAt;
+    booking.checkedInBy ||= user.fullName;
+    return HttpResponse.json(booking);
+  }),
+
   // Giữ ghế
   http.post('/api/v1/showtimes/:id/seat-holds', async ({ request, params }) => {
     await delay(500);
@@ -264,10 +304,16 @@ export const bookingHandlers = [
         { status: 404 },
       );
 
+    if (booking.checkedInAt || booking.seats?.some((seat) => seat.checkedInAt))
+      return mockError(409, 'BOOKING_ALREADY_CHECKED_IN', 'Không thể hủy đơn đã có vé được check-in.');
+
     // Kiểm tra còn trên 2 giờ trước giờ chiếu
     const showTime = new Date(booking.showtime).getTime();
     const twoHoursBefore = showTime - 2 * 60 * 60 * 1000;
-    if (booking.status !== 'PENDING' && (Date.now() >= twoHoursBefore || booking.status !== 'CONFIRMED')) {
+    if (
+      booking.status !== 'PENDING' &&
+      (Date.now() >= twoHoursBefore || booking.status !== 'CONFIRMED')
+    ) {
       return HttpResponse.json(
         {
           status: 400,
@@ -307,7 +353,8 @@ export const bookingHandlers = [
       return mockError(409, 'INVALID_BOOKING_STATUS', 'Đơn không còn chờ thanh toán');
     if (!['CREDIT_CARD', 'E_WALLET', 'QR_TRANSFER'].includes(body.method))
       return mockError(400, 'INVALID_METHOD', 'Phương thức không hợp lệ');
-    if (!['SUCCESS', 'FAILED'].includes(body.outcome || '')) return mockError(400, 'INVALID_PAYMENT_OUTCOME', 'booking.chooseSimulationOutcome');
+    if (!['SUCCESS', 'FAILED'].includes(body.outcome || ''))
+      return mockError(400, 'INVALID_PAYMENT_OUTCOME', 'booking.chooseSimulationOutcome');
     // Chỉ phát kết quả khi người thử chủ động kích hoạt bộ mô phỏng.
     const success = body.outcome === 'SUCCESS';
     if (success) {

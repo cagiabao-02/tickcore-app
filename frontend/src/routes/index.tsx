@@ -58,6 +58,7 @@ const AdminShowtimesPage = lazy(() => import('@/features/admin/pages/AdminShowti
 const AdminCombosPage = lazy(() => import('@/features/admin/pages/AdminCombosPage'));
 const AdminPromotionsPage = lazy(() => import('@/features/admin/pages/AdminPromotionsPage'));
 const AdminBookingsPage = lazy(() => import('@/features/admin/pages/AdminBookingsPage'));
+const AdminTicketScanPage = lazy(() => import('@/features/admin/pages/AdminTicketScanPage'));
 const AdminUsersPage = lazy(() => import('@/features/admin/pages/AdminUsersPage'));
 const AdminReviewsPage = lazy(() => import('@/features/admin/pages/AdminReviewsPage'));
 const AdminPricingPage = lazy(() => import('@/features/admin/pages/AdminPricingPage'));
@@ -147,6 +148,7 @@ export const router = createBrowserRouter([
       { path: '/admin/combos', element: <LazyPage component={AdminCombosPage} /> },
       { path: '/admin/promotions', element: <LazyPage component={AdminPromotionsPage} /> },
       { path: '/admin/bookings', element: <LazyPage component={AdminBookingsPage} /> },
+      { path: '/admin/ticket-scan', element: <LazyPage component={AdminTicketScanPage} /> },
       { path: '/admin/users', element: <LazyPage component={AdminUsersPage} /> },
       { path: '/admin/reviews', element: <LazyPage component={AdminReviewsPage} /> },
       { path: '/admin/pricing', element: <LazyPage component={AdminPricingPage} /> },

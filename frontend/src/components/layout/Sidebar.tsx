@@ -13,6 +13,7 @@ import {
   Popcorn,
   Tag,
   Ticket,
+  ScanLine,
   Users,
   MessageSquare,
   X,
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   { to: '/admin/combos', icon: Popcorn, labelKey: 'admin.combos' },
   { to: '/admin/promotions', icon: Tag, labelKey: 'admin.promotions' },
   { to: '/admin/bookings', icon: Ticket, labelKey: 'admin.bookings' },
+  { to: '/admin/ticket-scan', icon: ScanLine, labelKey: 'admin.ticketScan' },
   { to: '/admin/users', icon: Users, labelKey: 'admin.users' },
   { to: '/admin/reviews', icon: MessageSquare, labelKey: 'admin.reviewsMgmt' },
 ];

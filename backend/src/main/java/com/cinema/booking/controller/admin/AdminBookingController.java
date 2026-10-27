@@ -24,4 +24,10 @@ public class AdminBookingController {
     public BookingResponse cancelBookingAsAdmin(@PathVariable("id") Long id) {
         return service.cancelBookingAsAdmin(id);
     }
+
+    /** ADMIN: xác thực vé đã thanh toán và đánh dấu check-in cho từng ghế. */
+    @PostMapping("/admin/bookings/check-in")
+    public BookingResponse checkInTicket(@Valid @RequestBody TicketCheckInRequest request) {
+        return service.checkInTicket(request.ticketCode());
+    }
 }

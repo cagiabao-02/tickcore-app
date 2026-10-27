@@ -1,39 +1,94 @@
 package com.cinema.booking.service;
 
+import com.cinema.booking.dto.request.ComboRequest;
+import com.cinema.booking.dto.request.SearchRequest;
+import com.cinema.booking.dto.response.ComboResponse;
+import com.cinema.booking.dto.response.MessageResponse;
+import com.cinema.booking.dto.response.PageResponse;
+import com.cinema.booking.entity.Combo;
+import com.cinema.booking.exception.BusinessException;
+import com.cinema.booking.exception.NotFoundException;
+import com.cinema.booking.repository.BookingComboRepository;
+import com.cinema.booking.repository.ComboRepository;
 import java.util.List;
-import com.cinema.booking.dto.request.*;
-import com.cinema.booking.dto.response.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-/** Khung dịch vụ ComboService; toàn bộ nghiệp vụ do chủ dự án tự viết. */
+import org.springframework.transaction.annotation.Transactional;
+
+/** Nghiệp vụ danh mục combo và snapshot giá được BookingService ghi khi tạo đơn. */
 @Service
 public class ComboService {
-    /** Công khai: liệt kê combo đang bán. */
+    private final ComboRepository combos;
+    private final BookingComboRepository bookingCombos;
+
+    public ComboService(ComboRepository combos, BookingComboRepository bookingCombos) {
+        this.combos = combos;
+        this.bookingCombos = bookingCombos;
+    }
+
+    @Transactional(readOnly = true)
     public List<ComboResponse> listActiveCombos() {
-        // TODO: chủ dự án tự cài đặt; service chỉ gọi repository và trả DTO.
-        throw new UnsupportedOperationException("Chưa cài đặt");
+        return combos.findByActiveTrueOrderByNameAsc().stream().map(this::response).toList();
     }
 
-    /** ADMIN: lọc và phân trang combos. */
+    @Transactional(readOnly = true)
     public PageResponse<ComboResponse> searchCombos(SearchRequest query) {
-        // TODO: chủ dự án tự cài đặt; service chỉ gọi repository và trả DTO.
-        throw new UnsupportedOperationException("Chưa cài đặt");
+        int page = Math.max(0, query.page() == null ? 0 : query.page());
+        int size = Math.min(100, Math.max(1, query.size() == null ? 20 : query.size()));
+        Page<Combo> found = combos.search(trim(query.keyword()), PageRequest.of(page, size, Sort.by("name")));
+        return new PageResponse<>(found.getContent().stream().map(this::response).toList(), found.getNumber(),
+            found.getSize(), found.getTotalElements(), found.getTotalPages());
     }
 
-    /** ADMIN: tạo combos, kiểm tra dữ liệu và liên kết. */
+    @Transactional
     public ComboResponse createCombo(ComboRequest request) {
-        // TODO: chủ dự án tự cài đặt; service chỉ gọi repository và trả DTO.
-        throw new UnsupportedOperationException("Chưa cài đặt");
+        Combo combo = Combo.create();
+        apply(combo, request, true);
+        return response(combos.saveAndFlush(combo));
     }
 
-    /** ADMIN: cập nhật combos; kiểm tra xung đột nếu là suất chiếu. */
+    @Transactional
     public ComboResponse updateCombo(Long id, ComboRequest request) {
-        // TODO: chủ dự án tự cài đặt; service chỉ gọi repository và trả DTO.
-        throw new UnsupportedOperationException("Chưa cài đặt");
+        Combo combo = combos.findByIdForUpdate(id).orElseThrow(() -> new NotFoundException("COMBO_NOT_FOUND", "Không tìm thấy combo."));
+        apply(combo, request, false);
+        return response(combos.saveAndFlush(combo));
     }
 
-    /** ADMIN: xóa combos, kiểm tra các dữ liệu liên quan. */
+    @Transactional
     public MessageResponse deleteCombo(Long id) {
-        // TODO: chủ dự án tự cài đặt; service chỉ gọi repository và trả DTO.
-        throw new UnsupportedOperationException("Chưa cài đặt");
+        Combo combo = combos.findByIdForUpdate(id).orElseThrow(() -> new NotFoundException("COMBO_NOT_FOUND", "Không tìm thấy combo."));
+        if (bookingCombos.existsByComboId(id)) {
+            combo.setActive(false);
+            combos.save(combo);
+            return new MessageResponse("Combo đã được ngừng bán để giữ lịch sử đơn hàng.");
+        }
+        combos.delete(combo);
+        return new MessageResponse("Đã xóa combo.");
+    }
+
+    private void apply(Combo combo, ComboRequest request, boolean creating) {
+        String name = trim(request.name());
+        if (name == null) invalid("name", "Tên combo không được để trống.");
+        if (request.price() == null || request.price() < 0) invalid("price", "Giá combo phải là số nguyên không âm.");
+        combo.setName(name);
+        combo.setDescription(trim(request.description()));
+        combo.setImageUrl(trim(request.imageUrl()));
+        combo.setPrice(request.price());
+        if (request.active() != null) combo.setActive(request.active());
+        else if (creating) combo.setActive(true);
+    }
+
+    private ComboResponse response(Combo combo) {
+        return new ComboResponse(combo.getId(), combo.getName(), combo.getDescription(), combo.getImageUrl(), combo.getPrice(), combo.isActive());
+    }
+    private Combo findCombo(Long id) {
+        return combos.findById(id).orElseThrow(() -> new NotFoundException("COMBO_NOT_FOUND", "Không tìm thấy combo."));
+    }
+    private String trim(String value) { return value == null || value.isBlank() ? null : value.trim(); }
+    private void invalid(String field, String message) {
+        throw new BusinessException(HttpStatus.BAD_REQUEST, "INVALID_COMBO_" + field.toUpperCase(), message);
     }
 }

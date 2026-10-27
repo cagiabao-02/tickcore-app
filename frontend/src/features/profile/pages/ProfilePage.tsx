@@ -4,7 +4,7 @@
  */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
@@ -13,6 +13,7 @@ import { updateProfileApi, changePasswordApi } from '../api';
 import { useAuthStore } from '@/stores/authStore';
 import Tabs from '@/components/ui/Tabs';
 import Input from '@/components/ui/Input';
+import DatePicker from '@/components/ui/DatePicker';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 
@@ -46,6 +47,7 @@ export default function ProfilePage() {
 
   const {
     register: regProfile,
+    control: profileControl,
     handleSubmit: handleProfile,
     formState: { errors: errP },
   } = useForm<ProfileForm>({
@@ -103,12 +105,20 @@ export default function ProfilePage() {
           { key: 'password', label: t('profile.changePassword') },
         ]}
         activeTab={tab}
-        onChange={(next) => { resetPw({ currentPassword: '', newPassword: '', confirmPassword: '' }); setShowPw(false); setTab(next); }}
+        onChange={(next) => {
+          resetPw({ currentPassword: '', newPassword: '', confirmPassword: '' });
+          setShowPw(false);
+          setTab(next);
+        }}
       />
 
       <div className="mt-6 bg-card rounded-xl border border-base-primary p-6">
         {tab === 'info' ? (
-          <form key="profile-form" onSubmit={handleProfile((d) => profileMutation.mutate(d))} className="space-y-5">
+          <form
+            key="profile-form"
+            onSubmit={handleProfile((d) => profileMutation.mutate(d))}
+            className="space-y-5"
+          >
             <Input
               label={t('auth.email')}
               value={user?.email || ''}
@@ -127,7 +137,17 @@ export default function ProfilePage() {
               error={errP.phone ? t(`errors.${errP.phone.message}`) : undefined}
               {...regProfile('phone')}
             />
-            <Input label={t('profile.dateOfBirth')} type="date" {...regProfile('dateOfBirth')} />
+            <Controller
+              control={profileControl}
+              name="dateOfBirth"
+              render={({ field }) => (
+                <DatePicker
+                  label={t('profile.dateOfBirth')}
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                />
+              )}
+            />
             <Input
               label={t('profile.avatar')}
               type="url"
@@ -146,8 +166,19 @@ export default function ProfilePage() {
             </Button>
           </form>
         ) : (
-          <form key="password-form" onSubmit={handlePw((d) => pwMutation.mutate(d))} className="space-y-5">
-            <input type="text" name="username" autoComplete="username" value={user?.email || ''} readOnly hidden />
+          <form
+            key="password-form"
+            onSubmit={handlePw((d) => pwMutation.mutate(d))}
+            className="space-y-5"
+          >
+            <input
+              type="text"
+              name="username"
+              autoComplete="username"
+              value={user?.email || ''}
+              readOnly
+              hidden
+            />
             <Input
               id="profile-current-password"
               autoComplete="current-password"

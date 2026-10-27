@@ -1,6 +1,12 @@
 package com.cinema.booking.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import com.cinema.booking.entity.Payment;
-/** TODO: findByBookingId: trạng thái thanh toán của đơn. Chỉ ghi yêu cầu truy vấn, chưa khai báo phương thức hoặc @Query. */
-public interface PaymentRepository extends JpaRepository<Payment, Long> {}
+import com.cinema.booking.entity.PaymentStatus;
+import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+/** Các lần thử thanh toán của đơn; dùng SUCCESS để cấp quyền phát hành/check-in vé. */
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
+    List<Payment> findByBookingIdOrderByCreatedAtDescIdDesc(Long bookingId);
+    boolean existsByBookingIdAndStatus(Long bookingId, PaymentStatus status);
+}

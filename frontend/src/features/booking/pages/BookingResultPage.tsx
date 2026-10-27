@@ -6,7 +6,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle, XCircle, Home, Ticket, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Home, Ticket, Clock, ScanLine } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { getBookingDetailApi } from '@/features/tickets/api';
 import PaymentDialog from '@/features/payment/components/PaymentDialog';
@@ -57,16 +57,19 @@ export default function BookingResultPage() {
         >
           {isSuccess ? (
             <CheckCircle className="h-20 w-20 text-success-500 mx-auto mb-4" />
-          ) : isPending ? <Clock className="h-20 w-20 text-primary-500 mx-auto mb-4" /> : (
+          ) : isPending ? (
+            <Clock className="h-20 w-20 text-primary-500 mx-auto mb-4" />
+          ) : (
             <XCircle className="h-20 w-20 text-error-500 mx-auto mb-4" />
           )}
           <h1 className="text-2xl font-bold text-base-primary">
             {isSuccess
               ? t('booking.bookingSuccess')
-              : isPending ? t('booking.awaitingPayment')
-              : booking.status === 'CANCELLED'
-                ? t('tickets.statusCANCELLED')
-                : t('booking.bookingFailed')}
+              : isPending
+                ? t('booking.awaitingPayment')
+                : booking.status === 'CANCELLED'
+                  ? t('tickets.statusCANCELLED')
+                  : t('booking.bookingFailed')}
           </h1>
           <p className="text-sm text-base-secondary mt-2">
             {t('booking.bookingCode')}: <span className="font-bold">{booking.bookingCode}</span>
@@ -75,14 +78,31 @@ export default function BookingResultPage() {
 
         {/* QR Code */}
         {isSuccess && (
-          <div className="flex justify-center py-6">
-            <div className="p-4 bg-white rounded-xl shadow-sm">
-              <QRCodeSVG
-                role="img"
-                title={t('tickets.qrCode')}
-                value={booking.qrCode || booking.bookingCode}
-                size={160}
-              />
+          <div className="px-6 py-6 text-center">
+            <p className="mb-2 flex items-center justify-center gap-2 font-semibold text-base-primary">
+              <ScanLine className="h-5 w-5 text-primary-500" />
+              {t('tickets.checkInQr')}
+            </p>
+            <p className="mb-4 text-sm text-base-secondary">{t('tickets.checkInQrHint')}</p>
+            <div className="flex flex-wrap justify-center gap-4">
+              {booking.seats.map((seat) => (
+                <div key={seat.label} className="rounded-xl bg-secondary p-3">
+                  <p className="mb-2 text-sm font-semibold text-base-primary">{seat.label}</p>
+                  <div className="inline-block rounded-lg bg-white p-3 shadow-sm">
+                    <QRCodeSVG
+                      role="img"
+                      title={`${t('tickets.checkInQr')} ${seat.label}`}
+                      value={seat.ticketCode || booking.qrCode || booking.bookingCode}
+                      size={144}
+                    />
+                  </div>
+                  {seat.checkedInAt && (
+                    <p className="mt-2 text-xs text-success-600">
+                      {t('tickets.checkInSuccess')}: {new Date(seat.checkedInAt).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -145,6 +165,12 @@ export default function BookingResultPage() {
           </div>
         </div>
 
+        {booking.checkedInAt && (
+          <div className="mx-6 mb-5 rounded-lg bg-success-50 dark:bg-green-950/30 px-3 py-2 text-sm text-success-700 dark:text-success-400">
+            {t('tickets.checkInSuccess')} · {new Date(booking.checkedInAt).toLocaleString()}
+          </div>
+        )}
+
         {/* Hành động */}
         {!isSuccess && (
           <div className="px-6 pb-4 space-y-2">
@@ -154,7 +180,9 @@ export default function BookingResultPage() {
                   ? 'booking.holdExpiredMessage'
                   : booking.status === 'CANCELLED'
                     ? 'tickets.statusCANCELLED'
-                    : isPending ? 'booking.paymentPendingHint' : 'booking.paymentFailureReason',
+                    : isPending
+                      ? 'booking.paymentPendingHint'
+                      : 'booking.paymentFailureReason',
               )}
             </p>
             {booking.status === 'PENDING' && (
@@ -177,7 +205,21 @@ export default function BookingResultPage() {
           </Link>
         </div>
       </div>
-      {paymentOpen && <PaymentDialog booking={booking} method={booking.paymentMethod || 'QR_TRANSFER'} onClose={() => setPaymentOpen(false)} onComplete={(updated) => { client.setQueryData(['booking', bookingId], updated); setPaymentOpen(false); }} onExpired={() => { setPaymentOpen(false); void refetch(); }} />}
+      {paymentOpen && (
+        <PaymentDialog
+          booking={booking}
+          method={booking.paymentMethod || 'QR_TRANSFER'}
+          onClose={() => setPaymentOpen(false)}
+          onComplete={(updated) => {
+            client.setQueryData(['booking', bookingId], updated);
+            setPaymentOpen(false);
+          }}
+          onExpired={() => {
+            setPaymentOpen(false);
+            void refetch();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,8 +1,13 @@
 package com.cinema.booking.dto.request;
 
-import java.util.List;
-/** Tham số LoginRequest từ frontend; việc kiểm tra dữ liệu sẽ được cài đặt sau. */
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+/** Thông tin đăng nhập. */
 public record LoginRequest(
+    @NotBlank @Email @Size(max = 254)
     String email,
+    @NotBlank @Size(max = 72)
     String password
 ) {}

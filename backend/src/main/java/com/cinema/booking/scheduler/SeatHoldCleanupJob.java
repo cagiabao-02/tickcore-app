@@ -1,8 +1,20 @@
 package com.cinema.booking.scheduler;
 
+import com.cinema.booking.service.SeatHoldService;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
-/** Dọn giữ ghế hết hạn; chưa gắn lịch chạy hoặc thực thi nghiệp vụ. */
+/** Định kỳ thu hồi allocation ghế có hold đã hết hạn. */
+@Component
 public class SeatHoldCleanupJob {
-    /** TODO: gọi SeatHoldService.releaseExpiredHolds sau khi chủ dự án cài đặt dịch vụ. */
-    public void run() { throw new UnsupportedOperationException("Chưa cài đặt"); }
+    private final SeatHoldService seatHolds;
+
+    public SeatHoldCleanupJob(SeatHoldService seatHolds) {
+        this.seatHolds = seatHolds;
+    }
+
+    @Scheduled(fixedDelayString = "${booking.cleanup-delay-ms:30000}")
+    public void run() {
+        seatHolds.releaseExpiredHolds();
+    }
 }

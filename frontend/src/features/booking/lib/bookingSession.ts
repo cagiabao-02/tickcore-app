@@ -15,7 +15,10 @@ export async function ensureEditableHold(): Promise<void> {
   if (useBookingStore.getState().pendingBookingId) await releaseBookingSession();
   const state = useBookingStore.getState();
   if (!state.holdId && state.showtimeId && state.selectedSeats.length) {
-    const response = await holdSeatsApi(state.showtimeId, state.selectedSeats.map((seat) => seat.id));
+    const response = await holdSeatsApi(
+      state.showtimeId,
+      state.selectedSeats.map((seat) => seat.id),
+    );
     state.setHold(response.data.holdId, response.data.expiresAt);
   }
 }

@@ -1,8 +1,20 @@
 package com.cinema.booking.scheduler;
 
+import com.cinema.booking.service.BookingService;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
-/** Hết hạn đơn chờ thanh toán; chưa gắn lịch chạy hoặc thực thi nghiệp vụ. */
+/** Định kỳ hết hạn đơn chờ, giải phóng ghế và lượt promotion đã giữ. */
+@Component
 public class PendingBookingExpireJob {
-    /** TODO: gọi BookingService.expirePendingBookings sau khi chủ dự án cài đặt dịch vụ. */
-    public void run() { throw new UnsupportedOperationException("Chưa cài đặt"); }
+    private final BookingService bookings;
+
+    public PendingBookingExpireJob(BookingService bookings) {
+        this.bookings = bookings;
+    }
+
+    @Scheduled(fixedDelayString = "${booking.pending-cleanup-delay-ms:30000}")
+    public void run() {
+        bookings.expirePendingBookings();
+    }
 }

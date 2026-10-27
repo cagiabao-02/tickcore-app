@@ -5,7 +5,7 @@
  */
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import Input from '@/components/ui/Input';
+import DatePicker from '@/components/ui/DatePicker';
 import Select from '@/components/ui/Select';
 import ErrorState from '@/components/common/ErrorState';
 import { useQuery } from '@tanstack/react-query';
@@ -94,19 +94,17 @@ export default function DashboardPage() {
     <div className="animate-fade-in space-y-6">
       <h1 className="text-2xl font-bold text-base-primary">{t('admin.dashboard')}</h1>
       <div className="flex flex-wrap gap-3">
-        <Input
-          type="date"
+        <DatePicker
           label={t('admin.startDate')}
           value={from}
           max={to || undefined}
-          onChange={(e) => setFrom(e.target.value)}
+          onChange={setFrom}
         />
-        <Input
-          type="date"
+        <DatePicker
           label={t('admin.endDate')}
           min={from || undefined}
           value={to}
-          onChange={(e) => setTo(e.target.value)}
+          onChange={setTo}
         />
         <Select
           label={t('common.filter')}
@@ -162,18 +160,38 @@ export default function DashboardPage() {
               data={Array.from(grouped, ([dateLabel, revenue]) => ({ dateLabel, revenue }))}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" />
-              <XAxis dataKey="dateLabel" tick={{ fontSize: 11 }} stroke="var(--text-secondary)" />
-              <YAxis
-                tick={{ fontSize: 11 }}
+              <XAxis
+                dataKey="dateLabel"
+                tick={{ fontSize: 12, fill: 'var(--text-primary)' }}
                 stroke="var(--text-secondary)"
+                tickMargin={8}
+              />
+              <YAxis
+                tick={{ fontSize: 12, fill: 'var(--text-primary)' }}
+                stroke="var(--text-secondary)"
+                tickMargin={8}
                 tickFormatter={(v: number) =>
                   new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US', {
                     notation: 'compact',
                   }).format(v)
                 }
               />
-              <Tooltip formatter={(value) => formatCurrency(Number(value), language)} />
-              <Bar dataKey="revenue" fill="var(--color-primary-600)" radius={[4, 4, 0, 0]} />
+              <Tooltip
+                formatter={(value) => formatCurrency(Number(value), language)}
+                contentStyle={{
+                  backgroundColor: 'var(--bg-card)',
+                  borderColor: 'var(--border-primary)',
+                  color: 'var(--text-primary)',
+                }}
+                labelStyle={{ color: 'var(--text-primary)' }}
+                itemStyle={{ color: 'var(--color-primary-600)' }}
+              />
+              <Bar
+                dataKey="revenue"
+                name={t('admin.totalRevenue')}
+                fill="var(--color-primary-600)"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

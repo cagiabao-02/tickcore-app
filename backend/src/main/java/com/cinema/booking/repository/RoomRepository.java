@@ -1,6 +1,25 @@
 package com.cinema.booking.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import com.cinema.booking.entity.Room;
-/** TODO: findByCinemaId: lấy phòng của rạp; existsByCinemaIdAndName: kiểm tra tên phòng trùng. Chỉ ghi yêu cầu truy vấn, chưa khai báo phương thức hoặc @Query. */
-public interface RoomRepository extends JpaRepository<Room, Long> {}
+import java.util.List;
+import jakarta.persistence.LockModeType;
+import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+public interface RoomRepository extends JpaRepository<Room, Long> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Room r where r.id = :id")
+    Optional<Room> findByIdForUpdate(@Param("id") Long id);
+    List<Room> findByCinemaIdOrderByNameAsc(Long cinemaId);
+    boolean existsByCinemaIdAndNameIgnoreCase(Long cinemaId, String name);
+    boolean existsByCinemaIdAndNameIgnoreCaseAndIdNot(Long cinemaId, String name, Long id);
+    long countByCinemaId(Long cinemaId);
+    @Query("select r from Room r where (:cinemaId is null or r.cinemaId = :cinemaId) and " +
+        "(:keyword is null or lower(r.name) like lower(concat('%', :keyword, '%')))")
+    Page<Room> search(@Param("cinemaId") Long cinemaId, @Param("keyword") String keyword, Pageable pageable);
+}

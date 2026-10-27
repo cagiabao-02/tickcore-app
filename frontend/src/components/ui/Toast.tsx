@@ -38,8 +38,10 @@ const icons: Record<ToastType, ReactNode> = {
 
 /** Khai báo class tĩnh để Tailwind tạo đủ màu viền, nền luôn đặc ở cả hai theme. */
 const borders: Record<ToastType, string> = {
-  success: 'border-l-success-500', error: 'border-l-error-500',
-  warning: 'border-l-warning-500', info: 'border-l-secondary-500',
+  success: 'border-l-success-500',
+  error: 'border-l-error-500',
+  warning: 'border-l-warning-500',
+  info: 'border-l-secondary-500',
 };
 
 /** Thành phần hiển thị một toast */
@@ -89,7 +91,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ addToast, removeToast }}>
       {children}
       {/* Đặt dưới góc màn hình để không che header hoặc đồng hồ giữ ghế. */}
-      <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:w-96 z-[100] flex flex-col gap-2 pointer-events-none" aria-live="polite">
+      <div
+        className="fixed bottom-4 left-4 right-4 sm:left-auto sm:w-96 z-[100] flex flex-col gap-2 pointer-events-none"
+        aria-live="polite"
+      >
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} onRemove={() => removeToast(toast.id)} />
         ))}

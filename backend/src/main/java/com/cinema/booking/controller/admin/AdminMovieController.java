@@ -1,17 +1,22 @@
 package com.cinema.booking.controller.admin;
 
-import java.util.List;
 import com.cinema.booking.dto.request.*;
 import com.cinema.booking.dto.response.*;
 import com.cinema.booking.service.MovieService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
-/** Khai báo hợp đồng API; quyền truy cập sẽ được cấu hình khi cài đặt bảo mật. */
+
+/**
+ * Khai báo hợp đồng API; quyền truy cập sẽ được cấu hình khi cài đặt bảo mật.
+ */
 @RestController
 @RequestMapping("/api/v1")
 public class AdminMovieController {
     private final MovieService service;
-    public AdminMovieController(MovieService service) { this.service = service; }
+
+    public AdminMovieController(MovieService service) {
+        this.service = service;
+    }
 
     /** ADMIN: lọc và phân trang movies. */
     @GetMapping("/admin/movies")

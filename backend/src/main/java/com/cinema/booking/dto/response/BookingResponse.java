@@ -7,6 +7,8 @@ public record BookingResponse(
     Long id,
     String bookingCode,
     Long userId,
+    Long movieId,
+    Long showtimeId,
     String movieTitle,
     String moviePosterUrl,
     String cinemaName,
@@ -25,5 +27,7 @@ public record BookingResponse(
     String status,
     String createdAt,
     String qrCode,
-    String expiresAt
+    String expiresAt,
+    String checkedInAt,
+    String checkedInBy
 ) {}

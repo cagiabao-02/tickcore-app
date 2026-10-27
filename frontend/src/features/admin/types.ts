@@ -12,6 +12,7 @@ export type {
   Promotion,
   Booking,
   User,
+  UserRoleHistory,
   Review,
   Page,
   SeatLayout,

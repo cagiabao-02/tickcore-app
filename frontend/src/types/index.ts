@@ -121,6 +121,19 @@ export interface User {
   createdAt: string;
 }
 
+/** Bản ghi audit về thay đổi vai trò của tài khoản. */
+export interface UserRoleHistory {
+  id: number;
+  targetUserId: number;
+  changedByUserId: number;
+  changedByName: string;
+  changedByEmail: string;
+  oldRole: Role;
+  newRole: Role;
+  reason: string | null;
+  changedAt: string;
+}
+
 /**
  * Thể loại phim.
  */
@@ -304,6 +317,8 @@ export interface Booking {
   id: number;
   bookingCode: string;
   userId: number;
+  movieId?: number;
+  showtimeId?: number;
   movieTitle: string;
   moviePosterUrl: string;
   cinemaName: string;
@@ -311,7 +326,14 @@ export interface Booking {
   showtime: string;
   showDate: string;
   format: ShowFormat;
-  seats: Array<{ label: string; type: SeatType; price: number }>;
+  seats: Array<{
+    label: string;
+    type: SeatType;
+    price: number;
+    ticketCode?: string;
+    checkedInAt?: string | null;
+    checkedInBy?: string | null;
+  }>;
   combos: Array<{ name: string; quantity: number; price: number }>;
   subtotal: number;
   discount: number;
@@ -321,8 +343,10 @@ export interface Booking {
   paymentStatus: PaymentStatus;
   status: BookingStatus;
   createdAt: string;
-  qrCode: string;
+  qrCode: string | null;
   expiresAt?: string | null;
+  checkedInAt?: string | null;
+  checkedInBy?: string | null;
 }
 
 /**

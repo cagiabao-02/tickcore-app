@@ -6,5 +6,8 @@ import java.util.Map;
 public record BookingResponseSeatsItem(
     String label,
     String type,
-    Long price
+    Long price,
+    String ticketCode,
+    String checkedInAt,
+    String checkedInBy
 ) {}

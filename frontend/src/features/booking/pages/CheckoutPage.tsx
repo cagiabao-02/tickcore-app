@@ -56,7 +56,8 @@ export default function CheckoutPage() {
     clearHold,
     reset,
     setSelectedSeats,
-    pendingBookingId, setPendingBookingId,
+    pendingBookingId,
+    setPendingBookingId,
   } = useBookingStore();
 
   const countdown = useCountdown(holdExpiresAt);
@@ -100,16 +101,21 @@ export default function CheckoutPage() {
   // Chỉ tạo đơn PENDING; mở bước chờ, chưa gọi API xác nhận thanh toán.
   const payMutation = useMutation({
     mutationFn: async () => {
-      if (pendingBookingId) return getBookingDetailApi(pendingBookingId).then((response) => response.data);
+      if (pendingBookingId)
+        return getBookingDetailApi(pendingBookingId).then((response) => response.data);
       return createBookingApi({
-          holdId: holdId!,
-          showtimeId,
-          combos: selectedCombos.map((c) => ({ comboId: c.combo.id, quantity: c.quantity })),
-          promoCode: promoCode,
-        }).then((response) => response.data);
+        holdId: holdId!,
+        showtimeId,
+        combos: selectedCombos.map((c) => ({ comboId: c.combo.id, quantity: c.quantity })),
+        promoCode: promoCode,
+      }).then((response) => response.data);
     },
     onSuccess: (data) => {
-      if (data.status !== 'PENDING') { reset(); navigate(`/booking/result/${data.id}`); return; }
+      if (data.status !== 'PENDING') {
+        reset();
+        navigate(`/booking/result/${data.id}`);
+        return;
+      }
       setPendingBookingId(data.id);
       setPaymentBooking(data);
     },
@@ -155,7 +161,9 @@ export default function CheckoutPage() {
 
       <h1 className="text-2xl font-bold text-base-primary mb-6">{t('booking.checkout')}</h1>
       <BookingBackButton step="combos" disabled={payMutation.isPending} />
-      {pendingBookingId && <p className="text-sm text-base-secondary mb-4">{t('booking.pendingEditsHint')}</p>}
+      {pendingBookingId && (
+        <p className="text-sm text-base-secondary mb-4">{t('booking.pendingEditsHint')}</p>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Tóm tắt đơn */}
@@ -272,8 +280,22 @@ export default function CheckoutPage() {
 
         {/* Tổng tiền */}
         <div className="lg:col-span-1">
-          <div data-testid="order-summary" className="bg-card rounded-xl border border-base-primary p-4 lg:sticky lg:top-20">
-            {holdExpiresAt && !countdown.isExpired && <div data-testid="hold-countdown-desktop" className="hidden lg:flex flex-col gap-1 p-3 rounded-lg bg-secondary mb-4 font-mono text-sm font-semibold"><span>{t('booking.holdExpires')}</span><span className="flex items-center gap-2"><Timer className="h-4 w-4" />{countdown.display}</span></div>}
+          <div
+            data-testid="order-summary"
+            className="bg-card rounded-xl border border-base-primary p-4 lg:sticky lg:top-20"
+          >
+            {holdExpiresAt && !countdown.isExpired && (
+              <div
+                data-testid="hold-countdown-desktop"
+                className="hidden lg:flex flex-col gap-1 p-3 rounded-lg bg-secondary mb-4 font-mono text-sm font-semibold"
+              >
+                <span>{t('booking.holdExpires')}</span>
+                <span className="flex items-center gap-2">
+                  <Timer className="h-4 w-4" />
+                  {countdown.display}
+                </span>
+              </div>
+            )}
             <h3 className="font-semibold text-base-primary mb-4">{t('booking.orderSummary')}</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
@@ -311,13 +333,30 @@ export default function CheckoutPage() {
               isLoading={payMutation.isPending}
               onClick={() => payMutation.mutate()}
             >
-              {payMutation.isPending ? t('booking.processing') : t(pendingBookingId ? 'booking.continuePayment' : 'booking.proceedPayment')}
+              {payMutation.isPending
+                ? t('booking.processing')
+                : t(pendingBookingId ? 'booking.continuePayment' : 'booking.proceedPayment')}
             </Button>
           </div>
         </div>
       </div>
 
-      {paymentBooking && <PaymentDialog booking={paymentBooking} method={selectedMethod} onClose={() => setPaymentBooking(null)} onComplete={(booking) => { setPaymentBooking(null); reset(); navigate(`/booking/result/${booking.id}`); }} onExpired={() => { setPaymentBooking(null); setShowExpiredModal(true); }} />}
+      {paymentBooking && (
+        <PaymentDialog
+          booking={paymentBooking}
+          method={selectedMethod}
+          onClose={() => setPaymentBooking(null)}
+          onComplete={(booking) => {
+            setPaymentBooking(null);
+            reset();
+            navigate(`/booking/result/${booking.id}`);
+          }}
+          onExpired={() => {
+            setPaymentBooking(null);
+            setShowExpiredModal(true);
+          }}
+        />
+      )}
 
       <Modal
         isOpen={showExpiredModal}

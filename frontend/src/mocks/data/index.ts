@@ -949,12 +949,16 @@ export function createMockHold(
   userId: number,
   seatIds: number[],
 ): MockSeatHold {
+  const now = Date.now();
+  const regularExpiry = now + 10 * 60 * 1000;
+  const showtimeStart = mockShowtimes.find((showtime) => showtime.id === showtimeId)?.startTime;
+  const startTimestamp = showtimeStart ? new Date(showtimeStart).getTime() : Number.POSITIVE_INFINITY;
   const hold: MockSeatHold = {
     holdId: nextHoldId++,
     showtimeId,
     userId,
     seatIds,
-    expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 phút
+    expiresAt: new Date(Math.min(regularExpiry, startTimestamp)).toISOString(), // Tối đa 10 phút, không qua giờ chiếu
   };
   mockSeatHolds.push(hold);
   return hold;
@@ -1006,6 +1010,13 @@ export function isSeatHeld(showtimeId: number, seatId: number): boolean {
 // ===== BOOKING STATE =====
 let nextBookingId = mockBookings.length + 1;
 
+// Bảo đảm dữ liệu mẫu cũ cũng có QR riêng theo từng ghế.
+for (const booking of mockBookings) {
+  booking.seats.forEach((seat, index) => {
+    seat.ticketCode ??= `${booking.bookingCode}-${index + 1}`;
+  });
+}
+
 export function createMockBooking(data: {
   userId: number;
   showtimeId: number;
@@ -1022,8 +1033,18 @@ export function createMockBooking(data: {
   const seats = hold.seatIds.map((seatId) => {
     const seat = seatMap.seats.find((s) => s.id === seatId);
     return seat
-      ? { label: seat.label, type: seat.type, price: seat.price }
-      : { label: 'N/A', type: 'STANDARD' as const, price: 0 };
+      ? {
+          label: seat.label,
+          type: seat.type,
+          price: seat.price,
+          ticketCode: crypto.randomUUID().replaceAll('-', ''),
+        }
+      : {
+          label: 'N/A',
+          type: 'STANDARD' as const,
+          price: 0,
+          ticketCode: crypto.randomUUID().replaceAll('-', ''),
+        };
   });
 
   const combos = data.combos.map((c) => {

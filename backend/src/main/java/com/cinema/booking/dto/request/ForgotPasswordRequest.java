@@ -1,7 +1,11 @@
 package com.cinema.booking.dto.request;
 
-import java.util.List;
-/** Tham số ForgotPasswordRequest từ frontend; việc kiểm tra dữ liệu sẽ được cài đặt sau. */
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+/** Email xin hướng dẫn đặt lại mật khẩu. */
 public record ForgotPasswordRequest(
+    @NotBlank @Email @Size(max = 254)
     String email
 ) {}

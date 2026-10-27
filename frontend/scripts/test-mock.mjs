@@ -64,7 +64,12 @@ try {
   ]);
   check(race.map((response) => response.status).sort(), [200, 409]);
   const winner = race.findIndex((response) => response.status === 200);
-  await request(`/seat-holds/${race[winner].body.holdId}`, 'DELETE', undefined, winner === 0 ? token : second);
+  await request(
+    `/seat-holds/${race[winner].body.holdId}`,
+    'DELETE',
+    undefined,
+    winner === 0 ? token : second,
+  );
   check((await request(holdPath, 'POST', { seatIds: [] }, token)).status, 400);
   check(
     (await request(holdPath, 'POST', { seatIds: [seats[0].id, seats[0].id] }, token)).status,
@@ -103,8 +108,21 @@ try {
   check(booking.body.paymentStatus, 'PENDING');
   check(booking.body.qrCode, '');
   check(typeof booking.body.expiresAt, 'string');
-  check((await request('/payments/simulate', 'POST', { bookingId: booking.body.id, method: 'QR_TRANSFER' }, token)).status, 400);
-  check((await request(`/bookings/${booking.body.id}`, 'GET', undefined, token)).body.status, 'PENDING');
+  check(
+    (
+      await request(
+        '/payments/simulate',
+        'POST',
+        { bookingId: booking.body.id, method: 'QR_TRANSFER' },
+        token,
+      )
+    ).status,
+    400,
+  );
+  check(
+    (await request(`/bookings/${booking.body.id}`, 'GET', undefined, token)).body.status,
+    'PENDING',
+  );
   check(booking.body.totalAmount, booking.body.subtotal - Math.floor(booking.body.subtotal * 0.1));
   check((await request(`/bookings/${booking.body.id}`, 'GET', undefined, second)).status, 404);
   const failed = await request(
@@ -145,6 +163,32 @@ try {
   const admin = (
     await request('/auth/login', 'POST', { email: 'admin@tickcore.vn', password: 'password123' })
   ).body.accessToken;
+  check(
+    (await request('/admin/bookings/check-in', 'POST', { bookingCode: 'TC20261026001' }, token))
+      .status,
+    403,
+  );
+  check(
+    (await request('/admin/bookings/check-in', 'POST', { bookingCode: 'UNKNOWN' }, admin)).status,
+    404,
+  );
+  const checkedIn = await request(
+    '/admin/bookings/check-in',
+    'POST',
+    { bookingCode: 'TC20261026001' },
+    admin,
+  );
+  check(checkedIn.status, 200);
+  check(checkedIn.body.checkedInBy, 'Trần Thị Bình');
+  check(typeof checkedIn.body.checkedInAt, 'string');
+  const rescanned = await request(
+    '/admin/bookings/check-in',
+    'POST',
+    { bookingCode: 'TC20261026001' },
+    admin,
+  );
+  check(rescanned.status, 409);
+  check(rescanned.body.details.checkedInAt, checkedIn.body.checkedInAt);
   const combo = await request(
     '/admin/combos',
     'POST',

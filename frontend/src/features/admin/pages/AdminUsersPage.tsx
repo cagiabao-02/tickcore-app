@@ -5,8 +5,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Lock, Unlock } from 'lucide-react';
-import { adminListUsersApi, adminLockUserApi, adminUnlockUserApi, changeRoleApi } from '../api';
+import { Search, Lock, Unlock, History, X } from 'lucide-react';
+import {
+  adminListUsersApi,
+  adminLockUserApi,
+  adminUnlockUserApi,
+  adminUserRoleHistoryApi,
+  changeRoleApi,
+} from '../api';
 import Select from '@/components/ui/Select';
 import ErrorState from '@/components/common/ErrorState';
 import DataTable, { type Column } from '@/components/ui/DataTable';
@@ -14,7 +20,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { useDebounce } from '@/hooks/useDebounce';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatDateTime } from '@/lib/format';
 import { useLanguageStore } from '@/stores/languageStore';
 import type { User, Role } from '@/types';
 
@@ -24,11 +30,17 @@ export default function AdminUsersPage() {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
   const [keyword, setKeyword] = useState('');
+  const [historyUser, setHistoryUser] = useState<User | null>(null);
   const debouncedKeyword = useDebounce(keyword, 400);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['admin', 'users', debouncedKeyword],
     queryFn: () => adminListUsersApi(debouncedKeyword).then((r) => r.data),
+  });
+  const roleHistoryQuery = useQuery({
+    queryKey: ['admin', 'users', historyUser?.id, 'role-history'],
+    queryFn: () => adminUserRoleHistoryApi(historyUser!.id).then((response) => response.data),
+    enabled: historyUser !== null,
   });
 
   const lockMutation = useMutation({
@@ -109,9 +121,17 @@ export default function AdminUsersPage() {
     {
       key: 'actions',
       header: '',
-      render: (u) =>
-        u.role !== 'ADMIN' ? (
-          u.locked ? (
+      render: (u) => (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setHistoryUser(u)}
+            leftIcon={<History className="h-3.5 w-3.5" />}
+          >
+            {t('admin.roleHistory')}
+          </Button>
+          {u.role !== 'ADMIN' && (u.locked ? (
             <Button
               variant="ghost"
               size="sm"
@@ -130,8 +150,9 @@ export default function AdminUsersPage() {
             >
               {t('admin.lock')}
             </Button>
-          )
-        ) : null,
+          ))}
+        </div>
+      ),
     },
   ];
 
@@ -151,6 +172,56 @@ export default function AdminUsersPage() {
         keyExtractor={(u) => u.id}
         isLoading={isLoading}
       />
+      {historyUser && (
+        <section
+          aria-labelledby="role-history-heading"
+          className="rounded-xl border border-base-border bg-base-surface p-5"
+        >
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 id="role-history-heading" className="text-lg font-semibold text-base-primary">
+                {t('admin.roleHistory')} · {historyUser.fullName}
+              </h2>
+              <p className="text-sm text-base-secondary">{historyUser.email}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={t('common.close')}
+              onClick={() => setHistoryUser(null)}
+              leftIcon={<X className="h-4 w-4" />}
+            >
+              {t('common.close')}
+            </Button>
+          </div>
+          {roleHistoryQuery.isLoading ? (
+            <p className="text-sm text-base-secondary">{t('common.loading')}</p>
+          ) : roleHistoryQuery.isError ? (
+            <p role="alert" className="text-sm text-error-500">{t('common.error')}</p>
+          ) : roleHistoryQuery.data?.content.length ? (
+            <ol className="space-y-3">
+              {roleHistoryQuery.data.content.map((entry) => (
+                <li key={entry.id} className="rounded-lg border border-base-border p-3">
+                  <p className="font-medium text-base-primary">
+                    {t(`values.${entry.oldRole}`)} → {t(`values.${entry.newRole}`)}
+                  </p>
+                  <p className="mt-1 text-sm text-base-secondary">
+                    {t('admin.roleChangedBy')}: {entry.changedByName} ({entry.changedByEmail}) ·{' '}
+                    {formatDateTime(entry.changedAt, language)}
+                  </p>
+                  {entry.reason && (
+                    <p className="mt-1 text-sm text-base-secondary">
+                      {t('admin.roleChangeReason')}: {entry.reason}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="text-sm text-base-secondary">{t('admin.noRoleHistory')}</p>
+          )}
+        </section>
+      )}
     </div>
   );
 }

@@ -103,18 +103,18 @@ try {
     .readdirSync(`${backendRoot}/service`)
     .filter((file) => file.endsWith('.java'))) {
     const source = fs.readFileSync(`${backendRoot}/service/${file}`, 'utf8');
+    assert.ok(
+      !source.includes('throw new UnsupportedOperationException("Chưa cài đặt");'),
+      `${file}: còn service stub chưa triển khai`,
+    );
     for (const method of source.matchAll(/public (?!class)[^{]+\{([^}]*)\}/g)) {
       const body = method[1].replace(/\/\/[^\n]*/g, '').trim();
-      assert.equal(
-        body,
-        'throw new UnsupportedOperationException("Chưa cài đặt");',
-        `${file}: có logic ngoài khung yêu cầu`,
-      );
+      assert.ok(body.length > 0, `${file}: phát hiện public service method rỗng`);
       serviceMethods++;
     }
   }
   console.log(
-    `PASS: ${backend.size} endpoint MSW/controller, ${frontend.size} lời gọi API frontend, ${records} DTO khớp tên trường; ${serviceMethods} hàm service chỉ có stub.`,
+    `PASS: ${backend.size} endpoint MSW/controller, ${frontend.size} lời gọi API frontend, ${records} DTO khớp tên trường; đã quét ${serviceMethods} public service method và không còn stub.`,
   );
 } finally {
   await vite.close();

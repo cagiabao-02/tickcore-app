@@ -17,6 +17,8 @@ import { getUserFromToken } from './auth';
 import { adminCrudHandlers } from './adminCrud';
 import { mockError } from '../validation';
 
+const mockRoleHistory: import('@/types').UserRoleHistory[] = [];
+
 /** Lọc bản ghi theo khoảng ngày ISO, dùng chung cho các biểu đồ và thống kê. */
 function inRange(request: Request, date: string): boolean {
   const params = new URL(request.url).searchParams;
@@ -183,6 +185,8 @@ export const adminHandlers = [
         { status: 404, code: 'NOT_FOUND', message: 'Không tìm thấy đơn' },
         { status: 404 },
       );
+    if (booking.checkedInAt || booking.seats?.some((seat) => seat.checkedInAt))
+      return mockError(409, 'BOOKING_ALREADY_CHECKED_IN', 'Không thể hủy đơn đã có vé được check-in.');
     booking.status = 'CANCELLED';
     releaseBookingSeats(booking.id);
     return HttpResponse.json(booking);
@@ -210,33 +214,100 @@ export const adminHandlers = [
     });
   }),
 
-  http.put('/api/v1/admin/users/:id/lock', async ({ request, params }) => {
-    await delay(400);
+  http.get('/api/v1/admin/users/:id/role-history', async ({ request, params }) => {
+    await delay(200);
     const { error } = requireAdmin(request.headers.get('Authorization'));
     if (error) return error;
+    const userId = Number(params.id);
+    if (!mockUsers.some((user) => user.id === userId))
+      return mockError(404, 'USER_NOT_FOUND', 'Không tìm thấy tài khoản');
+    const url = new URL(request.url);
+    const page = Math.max(0, Number(url.searchParams.get('page') || 0));
+    const size = Math.min(100, Math.max(1, Number(url.searchParams.get('size') || 20)));
+    const entries = mockRoleHistory.filter((entry) => entry.targetUserId === userId);
+    const content = entries.slice(page * size, (page + 1) * size);
+    return HttpResponse.json({
+      content,
+      page,
+      size,
+      totalElements: entries.length,
+      totalPages: Math.ceil(entries.length / size),
+    });
+  }),
+
+  http.put('/api/v1/admin/users/:id/lock', async ({ request, params }) => {
+    await delay(400);
+    const { error, user: actor } = requireAdmin(request.headers.get('Authorization'));
+    if (error) return error;
     const user = mockUsers.find((u) => u.id === Number(params.id));
-    if (user) user.locked = true;
+    if (!user) return mockError(404, 'USER_NOT_FOUND', 'Không tìm thấy tài khoản');
+    if (actor?.id === user.id)
+      return mockError(
+        409,
+        'CANNOT_CHANGE_SELF',
+        'Không thể thay đổi trạng thái hoặc vai trò của chính mình.',
+      );
+    if (
+      user.role === 'ADMIN' &&
+      !user.locked &&
+      mockUsers.filter((item) => item.role === 'ADMIN' && !item.locked).length <= 1
+    )
+      return mockError(409, 'LAST_ADMIN', 'Không thể thu hồi hoặc khóa admin hoạt động cuối cùng.');
+    user.locked = true;
     return HttpResponse.json(user);
   }),
 
   http.put('/api/v1/admin/users/:id/unlock', async ({ request, params }) => {
     await delay(400);
-    const { error } = requireAdmin(request.headers.get('Authorization'));
+    const { error, user: actor } = requireAdmin(request.headers.get('Authorization'));
     if (error) return error;
     const user = mockUsers.find((u) => u.id === Number(params.id));
-    if (user) user.locked = false;
+    if (!user) return mockError(404, 'USER_NOT_FOUND', 'Không tìm thấy tài khoản');
+    if (actor?.id === user.id)
+      return mockError(
+        409,
+        'CANNOT_CHANGE_SELF',
+        'Không thể thay đổi trạng thái hoặc vai trò của chính mình.',
+      );
+    user.locked = false;
     return HttpResponse.json(user);
   }),
 
   http.put('/api/v1/admin/users/:id/role', async ({ request, params }) => {
     await delay(400);
-    const { error } = requireAdmin(request.headers.get('Authorization'));
+    const { error, user: actor } = requireAdmin(request.headers.get('Authorization'));
     if (error) return error;
-    const body = (await request.json()) as { role: string };
+    const body = (await request.json()) as { role: string; reason?: string };
     const user = mockUsers.find((u) => u.id === Number(params.id));
     if (!user) return mockError(404, 'NOT_FOUND', 'Không tìm thấy người dùng');
     if (body.role !== 'USER' && body.role !== 'ADMIN')
       return mockError(400, 'INVALID_ROLE', 'Vai trò không hợp lệ');
+    if (actor?.id === user.id)
+      return mockError(
+        409,
+        'CANNOT_CHANGE_SELF',
+        'Không thể thay đổi trạng thái hoặc vai trò của chính mình.',
+      );
+    if (
+      user.role === 'ADMIN' &&
+      !user.locked &&
+      body.role !== 'ADMIN' &&
+      mockUsers.filter((item) => item.role === 'ADMIN' && !item.locked).length <= 1
+    )
+      return mockError(409, 'LAST_ADMIN', 'Không thể thu hồi hoặc khóa admin hoạt động cuối cùng.');
+    if (user.role !== body.role && actor) {
+      mockRoleHistory.unshift({
+        id: (mockRoleHistory[0]?.id ?? 0) + 1,
+        targetUserId: user.id,
+        changedByUserId: actor.id,
+        changedByName: actor.fullName,
+        changedByEmail: actor.email,
+        oldRole: user.role,
+        newRole: body.role,
+        reason: body.reason?.trim() || null,
+        changedAt: new Date().toISOString(),
+      });
+    }
     user.role = body.role;
     return HttpResponse.json(user);
   }),

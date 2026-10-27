@@ -1,10 +1,18 @@
 package com.cinema.booking.dto.request;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import java.util.List;
-/** Tham số CreateBookingRequest từ frontend; việc kiểm tra dữ liệu sẽ được cài đặt sau. */
+
+/** Tạo đơn từ hold; giá, ghế và giảm giá đều được xác minh lại phía server. */
 public record CreateBookingRequest(
+    @NotNull @Positive
     Long holdId,
+    @NotNull @Positive
     Long showtimeId,
-    List<BookingComboRequest> combos,
+    @Size(max = 20) List<@NotNull @Valid BookingComboRequest> combos,
+    @Size(max = 64)
     String promoCode
 ) {}

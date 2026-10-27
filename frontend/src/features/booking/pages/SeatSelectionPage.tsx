@@ -157,7 +157,14 @@ export default function SeatSelectionPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 animate-fade-in">
-      <Button variant="outline" className="mb-4" leftIcon={<ArrowLeft className="h-4 w-4" />} onClick={() => navigate(`/movies/${showtime.data?.movieId}#showtimes`)}>{t('booking.backToShowtimes')}</Button>
+      <Button
+        variant="outline"
+        className="mb-4"
+        leftIcon={<ArrowLeft className="h-4 w-4" />}
+        onClick={() => navigate(`/movies/${showtime.data?.movieId}#showtimes`)}
+      >
+        {t('booking.backToShowtimes')}
+      </Button>
       {/* Header */}
       <div className="bg-card rounded-xl border border-base-primary p-4 mb-6">
         <h1 className="text-lg font-bold text-base-primary">{movieTitle}</h1>

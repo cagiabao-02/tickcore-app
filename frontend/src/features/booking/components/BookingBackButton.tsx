@@ -9,11 +9,19 @@ import Button from '@/components/ui/Button';
 import { ensureEditableHold, releaseBookingSession } from '../lib/bookingSession';
 import type { ApiError } from '@/types';
 
-export default function BookingBackButton({ step, disabled = false }: { step: 'seats' | 'combos'; disabled?: boolean }) {
-  const navigate = useNavigate(); const { t } = useTranslation();
-  const client = useQueryClient(); const { addToast } = useToast();
+export default function BookingBackButton({
+  step,
+  disabled = false,
+}: {
+  step: 'seats' | 'combos';
+  disabled?: boolean;
+}) {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const client = useQueryClient();
+  const { addToast } = useToast();
   const back = useMutation({
-    mutationFn: () => step === 'seats' ? releaseBookingSession() : ensureEditableHold(),
+    mutationFn: () => (step === 'seats' ? releaseBookingSession() : ensureEditableHold()),
     onSuccess: () => {
       const id = useBookingStore.getState().showtimeId;
       void client.invalidateQueries({ queryKey: ['seatMap', id] });
@@ -27,5 +35,20 @@ export default function BookingBackButton({ step, disabled = false }: { step: 's
       }
     },
   });
-  return <div className="mb-4 space-y-1"><Button variant="outline" disabled={disabled} onClick={() => back.mutate()} isLoading={back.isPending} leftIcon={<ArrowLeft className="h-4 w-4" />}>{t(step === 'seats' ? 'booking.backToSeats' : 'booking.backToCombos')}</Button>{step === 'seats' && <p className="text-xs text-base-secondary">{t('booking.backSeatsHint')}</p>}</div>;
+  return (
+    <div className="mb-4 space-y-1">
+      <Button
+        variant="outline"
+        disabled={disabled}
+        onClick={() => back.mutate()}
+        isLoading={back.isPending}
+        leftIcon={<ArrowLeft className="h-4 w-4" />}
+      >
+        {t(step === 'seats' ? 'booking.backToSeats' : 'booking.backToCombos')}
+      </Button>
+      {step === 'seats' && (
+        <p className="text-xs text-base-secondary">{t('booking.backSeatsHint')}</p>
+      )}
+    </div>
+  );
 }

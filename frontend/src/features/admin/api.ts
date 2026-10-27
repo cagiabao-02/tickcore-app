@@ -15,6 +15,7 @@ import type {
   Promotion,
   Booking,
   User,
+  UserRoleHistory,
   Review,
   Page,
   SeatLayout,
@@ -87,9 +88,13 @@ export const adminListBookingsApi = (params: { page?: number; size?: number }) =
   httpClient.get<Page<Booking>>('/admin/bookings', { params });
 export const adminCancelBookingApi = (id: number) =>
   httpClient.post<Booking>(`/admin/bookings/${id}/cancel`);
+export const adminCheckInBookingApi = (ticketCode: string) =>
+  httpClient.post<Booking>('/admin/bookings/check-in', { ticketCode });
 
 export const adminListUsersApi = (keyword?: string) =>
   httpClient.get<Page<User>>('/admin/users', { params: { keyword, size: 1000 } });
+export const adminUserRoleHistoryApi = (id: number, params: { page?: number; size?: number } = {}) =>
+  httpClient.get<Page<UserRoleHistory>>(`/admin/users/${id}/role-history`, { params });
 export const adminLockUserApi = (id: number) => httpClient.put<User>(`/admin/users/${id}/lock`);
 export const adminUnlockUserApi = (id: number) => httpClient.put<User>(`/admin/users/${id}/unlock`);
 

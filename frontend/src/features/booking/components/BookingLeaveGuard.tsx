@@ -15,15 +15,20 @@ export default function BookingLeaveGuard() {
     const state = useBookingStore.getState();
     return (
       !!state.holdId &&
-      ![...(state.pendingBookingId ? [] : [`/booking/${state.showtimeId}/combos`]), `/booking/${state.showtimeId}/checkout`].includes(
-        nextLocation.pathname,
-      )
+      ![
+        ...(state.pendingBookingId ? [] : [`/booking/${state.showtimeId}/combos`]),
+        `/booking/${state.showtimeId}/checkout`,
+      ].includes(nextLocation.pathname)
     );
   });
   const release = useMutation({
     mutationFn: async () => {
       const state = useBookingStore.getState();
-      if (blocker.state === 'blocked' && blocker.location.pathname === `/booking/${state.showtimeId}/combos`) await ensureEditableHold();
+      if (
+        blocker.state === 'blocked' &&
+        blocker.location.pathname === `/booking/${state.showtimeId}/combos`
+      )
+        await ensureEditableHold();
       else await releaseBookingSession();
     },
     onSuccess: () => {

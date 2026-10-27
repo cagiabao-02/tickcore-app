@@ -21,7 +21,7 @@
 | 3. Mock | Đủ dữ liệu demo, nghiệp vụ chưa kín | Lưu đăng ký/CRUD; kiểm tra quyền, ghế hợp lệ, hạn hold, mã giảm giá; trả ghế khi hủy/hết hạn; nhánh thanh toán xác định; kiểm thử HTTP |
 | 4. Khách hàng | Phần lớn trang đã có; nhiều chi tiết thiếu | Hoàn thiện các mục trong bảng dưới, kiểm tra luồng chính trên trình duyệt |
 | 5. Admin | Chủ yếu bảng xem dữ liệu | Nối CRUD và form kiểm tra cho sáu tài nguyên; sơ đồ ghế, giá vé, lịch theo ngày, lọc/thống kê, vai trò và hộp xác nhận |
-| 6. Backend | Chưa có | Thêm khung Java 21/Spring Boot 3/Maven theo tầng; DTO record, controller, service stub, entity trống, repository, cấu hình và job TODO; biên dịch Maven |
+| 6. Backend | Đang triển khai | Có V1–V7 Flyway, seed thể loại, cleanup token hết hạn, audit role có API tra cứu, entity JPA, JWT/auth version, reset mật khẩu qua SMTP tùy chọn, giữ ghế transaction, tạo đơn chờ, thanh toán mô phỏng dev, check-in từng vé; CRUD/tìm kiếm danh mục và dashboard đã nối; Maven compile đạt. Còn cổng thanh toán thật và xác minh migration/tranh chấp trên MySQL |
 | 7. Tài liệu | Chỉ có prompt gốc | README gốc/frontend/backend, giả định, cách chạy và bảng đối chiếu này |
 
 ## Chức năng khách hàng ở Phần 3
@@ -33,11 +33,11 @@
 | 3 | Chi tiết phim | Giữ thông tin phim; thêm nhúng trailer YouTube khi có URL, khu đánh giá đầy đủ |
 | 4 | Chọn suất | Sửa bộ lọc thành phố; giữ thanh 7 ngày; chặn suất đã qua; số ghế trống tính từ sơ đồ thực tế |
 | 5 | Ghế | Giữ giới hạn 8, phân loại/giá, polling 5 giây và cuộn ngang; giá đọc cấu hình; không chọn lối đi; mở trực tiếp bằng URL được |
-| 6 | Hold | Giữ ghế 10 phút; đồng hồ sticky; modal hết hạn nhả ghế và về sơ đồ; xác nhận khi rời luồng trong SPA và cảnh báo đóng trang |
+| 6 | Hold | Giữ ghế tối đa 10 phút và không quá giờ chiếu; đồng hồ sticky; modal hết hạn nhả ghế và về sơ đồ; xác nhận khi rời luồng trong SPA và cảnh báo đóng trang |
 | 7 | Combo | Tăng/giảm, tải/lỗi/rỗng; sửa bỏ qua để xóa lựa chọn combo |
 | 8 | Mã giảm giá | Kiểm tra cùng quy tắc khi áp mã và tạo đơn; hạn, mức tối thiểu, lượt dùng, trần giảm; gỡ mã; xóa giảm giá khi giỏ đổi |
-| 9 | Thanh toán | Thẻ/QR thành công, ví thất bại có chủ ý; chặn hết hạn; giữ mã đơn khi thử lại lỗi mạng để tránh tạo đơn trùng |
-| 10 | Kết quả | Sửa khóa dịch, lỗi điều hướng do reset giỏ; thêm lý do thất bại và thử lại; QR thật từ mã vé; hiển thị trạng thái hủy |
+| 9 | Thanh toán | Tạo đơn chờ trước; chỉ xác nhận sau khi chọn kết quả mô phỏng; QR thanh toán tách khỏi QR vé; chặn hết hạn và giữ mã đơn khi thử lại lỗi mạng |
+| 10 | Kết quả | Chỉ hiện QR vé sau xác nhận; đơn chờ có thể tiếp tục thanh toán; hiển thị trạng thái hủy |
 | 11 | Vé | Ba tab, phân trang, link chi tiết QR; hủy có xác nhận và kiểm tra còn trên 2 giờ |
 | 12 | Đăng ký/đăng nhập | Giữ form Zod/RHF, ẩn/hiện mật khẩu và redirect; đăng ký mock đã lưu được tài khoản; sửa lựa chọn ghi nhớ phiên |
 | 13 | Quên/đặt lại mật khẩu | Có giao diện và API mock phản hồi; không gửi email thật, đúng phạm vi tài liệu |
@@ -59,8 +59,8 @@
 | 6 | Giá vé | Trang cấu hình giá từng loại ghế và phụ thu 3D/IMAX/cuối tuần; API bổ sung đồng bộ cả ba phía |
 | 7 | Combo | CRUD tên/mô tả/ảnh/giá/bật-tắt; đã thử thêm và thấy bảng cập nhật trên trình duyệt |
 | 8 | Khuyến mãi | CRUD phần trăm/số tiền, tối thiểu, trần giảm, hiệu lực, giới hạn lượt và bật-tắt |
-| 9 | Đặt vé | Lọc trạng thái/ngày/phim, mở chi tiết, xác nhận hủy và nhả ghế |
-| 10 | Người dùng | Tìm kiếm, khóa/mở khóa, đổi USER/ADMIN |
+| 9 | Đặt vé | Lọc trạng thái/ngày/phim, mở chi tiết, xác nhận hủy và nhả ghế; thêm màn hình quét mã/check-in mock, ghi người và thời gian, chặn quét lặp |
+| 10 | Người dùng | Tìm kiếm, khóa/mở khóa, đổi USER/ADMIN; xem lịch sử vai trò gồm người thực hiện, thời điểm và lý do |
 | 11 | Đánh giá | Ẩn/hiện, xóa có xác nhận |
 
 Bảng quản trị dùng DataTable chung có tải, rỗng, sắp xếp và phân trang. Những thao tác xóa tài nguyên có hộp xác nhận.
@@ -70,12 +70,12 @@ Bảng quản trị dùng DataTable chung có tải, rỗng, sắp xếp và ph�
 - Bổ sung sau phản hồi IDE: loại `src/main.ts` template khỏi tsconfig để `src/main.tsx` thực sự được kiểm tra; thêm `vite-env.d.ts`; đổi tùy chọn MSW 3 sang `onUnhandledFrame`. Đã xác minh danh sách file TypeScript chứa `main.tsx` và chạy lại build/lint/kiểm thử.
 - `npm run dev`: Vite khởi động, đã dùng ứng dụng trên trình duyệt.
 - `npm run lint`, `npm run build`, `npm run format:check`: đạt sau khi sửa và định dạng mã.
-- `npm run test:mock`: 45 kiểm tra qua HTTP/MSW, gồm đăng ký/đăng nhập, quyền admin, giữ trùng ghế, hold hết hạn, quyền sở hữu đơn, mã hết hạn, thanh toán thất bại/thử lại/hủy, CRUD combo, xung đột suất, sơ đồ lối đi/VIP, giá mới, đánh giá và hết hạn đơn chờ.
+- `npm run test:mock`: 60 kiểm tra qua HTTP/MSW, gồm đăng ký/đăng nhập, quyền admin, tranh chấp giữ trùng ghế, hold hết hạn, thanh toán và hủy, check-in hợp lệ, từ chối người không có quyền/mã lạ/quét lặp, CRUD combo, xung đột suất, sơ đồ ghế, đánh giá và hết hạn đơn chờ.
 - `npm run test:http`: refresh đồng thời một lần, không treo khi thiếu refresh token, giữ session/local storage, không refresh lỗi login, lỗi hàng đợi có dạng ApiError.
-- `npm run check:i18n`: 421 khóa Việt/Anh khớp và không thiếu khóa tĩnh được tham chiếu trong TypeScript.
-- `npm run check:contract`: 71 endpoint MSW/controller khớp, 70 lời gọi API frontend có endpoint tương ứng, 26 DTO khớp tên trường; 77 thân hàm service chỉ có stub.
+- `npm run check:i18n`: 461 khóa Việt/Anh khớp và không thiếu khóa tĩnh được tham chiếu trong TypeScript.
+- `npm run check:contract`: 73 endpoint MSW/controller khớp, 72 lời gọi API frontend có endpoint tương ứng, 27 DTO khớp tên trường; đã quét 95 public service method và không còn stub.
 - `mvn compile`: đã thành công với Java 21; không cần DB thật.
-- Đã đi luồng trình duyệt: đăng nhập → phim → ngày chiếu → 2 ghế → combo → WELCOME10 → ví thất bại → thử lại bằng thẻ thành công → QR → Vé của tôi.
+- Đã đi luồng trình duyệt: đăng nhập → phim → ngày chiếu → ghế → combo → checkout → đơn chờ và QR thanh toán demo; xác nhận không có kết quả/QR vé trước khi chọn mô phỏng thành công.
 - Đã kiểm tra hiển thị vé ở 360px, USER bị chặn admin, thêm combo admin, Việt/Anh và sáng/tối/hệ thống.
 - Đã thử hủy hộp thoại rời luồng rồi thanh toán thành công; xác nhận rời luồng nhả hold và đi đúng `/movies`.
 
@@ -83,8 +83,8 @@ Bảng quản trị dùng DataTable chung có tải, rỗng, sắp xếp và ph�
 
 ## Chưa làm hoặc cần lưu ý khi tiếp tục
 
-1. **Nghiệp vụ backend, JPA, DB, JWT thật, WebSocket và lịch cleanup thật chưa được viết có chủ ý**, theo Phần 1/4. Backend chỉ đạt mục tiêu biên dịch khung; không xác nhận chạy ứng dụng kết nối DB.
+1. **Backend chưa hoàn chỉnh:** chưa tích hợp cổng thanh toán thật. Migration và tranh chấp giao dịch chưa được xác minh trên MySQL trong môi trường này; WebSocket chưa triển khai. Reset mật khẩu cần bật SMTP, mặc định đang tắt.
 2. Mock lưu trong bộ nhớ một tab, tải lại trang sẽ tạo dữ liệu mới. Chưa có đồng bộ giữ ghế giữa hai tab/thiết bị độc lập; backend thật sẽ đảm nhiệm việc đó. Tranh chấp hai tài khoản đã được thử trong cùng kho mock qua HTTP.
 3. Đã kiểm tra luồng chính và các trường hợp lỗi quan trọng; chưa chạy kiểm thử hình ảnh tự động cho toàn bộ trang, mọi kích thước màn hình và mọi tổ hợp trường form. Không coi kết quả build là bằng chứng cho toàn bộ QA giao diện.
 4. Kiểu hợp đồng chung giữ ở `src/types/index.ts`; `features/*/types.ts` tái xuất để tránh hai định nghĩa lệch nhau. Những luồng liên quan dùng component/UI và hook dùng chung thay vì tạo thư mục trống chỉ để giống sơ đồ.
-5. Ngân hàng, email, lưu dữ liệu lâu dài và triển khai hosting không thuộc phạm vi mock hiện tại. Xem [Giả định trong README](README.md#giả-định) trước khi nối backend.
+5. Ngân hàng thật, triển khai hosting và email thật không thuộc phạm vi mock. Backend hỗ trợ reset mật khẩu qua SMTP cấu hình riêng; mock vẫn dùng phản hồi giả. Xem [Giả định trong README](README.md#giả-định) trước khi nối backend.

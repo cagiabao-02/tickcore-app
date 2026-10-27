@@ -16,6 +16,7 @@ import type { Booking } from '@/types';
 import Modal from '@/components/ui/Modal';
 import Select from '@/components/ui/Select';
 import Input from '@/components/ui/Input';
+import DatePicker from '@/components/ui/DatePicker';
 import ErrorState from '@/components/common/ErrorState';
 
 export default function AdminBookingsPage() {
@@ -145,12 +146,7 @@ export default function AdminBookingsPage() {
             })),
           ]}
         />
-        <Input
-          type="date"
-          label={t('common.date')}
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
+        <DatePicker label={t('common.date')} value={date} onChange={setDate} />
         <Input label={t('admin.movie')} value={movie} onChange={(e) => setMovie(e.target.value)} />
       </div>
       <DataTable

@@ -1,5 +1,13 @@
 package com.cinema.booking.exception;
 
+/** Lỗi tài nguyên không tồn tại, được chuyển thành HTTP 404. */
+public class NotFoundException extends RuntimeException {
+    private final String code;
 
-/** Ngoại lệ dự kiến; bổ sung mã lỗi và mapping khi cài đặt backend. */
-public class NotFoundException extends RuntimeException {}
+    public NotFoundException(String code, String message) {
+        super(message);
+        this.code = code;
+    }
+
+    public String getCode() { return code; }
+}

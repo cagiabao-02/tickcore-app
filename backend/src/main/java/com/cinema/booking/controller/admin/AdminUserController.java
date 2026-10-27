@@ -31,6 +31,13 @@ public class AdminUserController {
         return service.unlockUser(id);
     }
 
+    /** ADMIN: xem người đổi vai trò, lý do và thời điểm theo từng user. */
+    @GetMapping("/admin/users/{id}/role-history")
+    public PageResponse<UserRoleHistoryResponse> roleHistory(@PathVariable("id") Long id,
+        @ModelAttribute SearchRequest query) {
+        return service.getRoleHistory(id, query);
+    }
+
     /** ADMIN: đổi vai trò USER hoặc ADMIN. */
     @PutMapping("/admin/users/{id}/role")
     public UserResponse changeRole(@PathVariable("id") Long id, @Valid @RequestBody RoleRequest request) {

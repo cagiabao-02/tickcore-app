@@ -17,6 +17,7 @@ import { listGenresApi } from '@/features/movies/api';
 import DataTable from '@/components/ui/DataTable';
 import Pagination from '@/components/ui/Pagination';
 import Input from '@/components/ui/Input';
+import DatePicker from '@/components/ui/DatePicker';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
 import Modal from '@/components/ui/Modal';
@@ -306,12 +307,7 @@ export default function ResourceManager({ resource }: { resource: AdminResource 
         </Button>
       )}
       {calendar && resource === 'showtimes' && (
-        <Input
-          type="date"
-          label={t('common.date')}
-          value={calendarDate}
-          onChange={(e) => setCalendarDate(e.target.value)}
-        />
+        <DatePicker label={t('common.date')} value={calendarDate} onChange={setCalendarDate} />
       )}
       {calendar && resource === 'showtimes' ? (
         <div className="grid sm:grid-cols-2 gap-4">
